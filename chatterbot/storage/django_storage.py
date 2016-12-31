@@ -117,27 +117,18 @@ class DjangoStorageAdapter(StorageAdapter):
         Removes any responses from statements if the response text matches the
         input text.
         """
-        from chatterbot.ext.django_chatterbot.models import Statement as StatementModel
-        from chatterbot.ext.django_chatterbot.models import Response as ResponseModel
-        from django.db.models import Q
-        statements = StatementModel.objects.filter(text=statement_text)
-
-        responses = ResponseModel.objects.filter(
-            Q(statement__text=statement_text) | Q(response__text=statement_text)
-        )
-
-        responses.delete()
-        statements.delete()
+        from chatterbot.ext.django_chatterbot.models import Statement
+        Statement.objects.filter(text=statement_text).delete()
 
     def drop(self):
         """
         Remove all data from the database.
         """
-        from chatterbot.ext.django_chatterbot.models import Statement as StatementModel
-        from chatterbot.ext.django_chatterbot.models import Response as ResponseModel
+        from chatterbot.ext.django_chatterbot.models import Statement
+        from chatterbot.ext.django_chatterbot.models import Conversation
 
-        StatementModel.objects.all().delete()
-        ResponseModel.objects.all().delete()
+        Statement.objects.all().delete()
+        Conversation.objects.all().delete()
 
     def get_response_statements(self):
         """
@@ -147,8 +138,5 @@ class DjangoStorageAdapter(StorageAdapter):
         matching statement that does not have a known response.
         """
         from chatterbot.ext.django_chatterbot.models import Statement as StatementModel
-        from chatterbot.ext.django_chatterbot.models import Response as ResponseModel
 
-        responses = ResponseModel.objects.all()
-
-        return StatementModel.objects.filter(in_response__in=responses)
+        return StatementModel.objects.filter(in_response_to__isnull=False)

@@ -45,6 +45,12 @@ class Statement(models.Model):
         # Responses to be saved if the statement is updated with the storage adapter
         self.response_statement_cache = []
 
+    def responses(self):
+        """
+        Return a list of statements that are known responses to this statement.
+        """
+        return Statement.objects.filter(in_response_to__text=self.text)
+
     def add_extra_data(self, key, value):
         """
         Add extra data to the extra_data field.
@@ -58,12 +64,6 @@ class Statement(models.Model):
         extra_data[key] = value
 
         self.extra_data = json.dumps(extra_data)
-
-    def add_response(self, statement):
-        """
-        Add a response to this statement.
-        """
-        self.response_statement_cache.append(statement)
 
     def serialize(self):
         """

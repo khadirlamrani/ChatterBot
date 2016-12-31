@@ -1,6 +1,5 @@
 import warnings
 from chatterbot.storage import StorageAdapter
-from chatterbot.conversation import Response
 
 
 class JsonFileStorageAdapter(StorageAdapter):
@@ -59,24 +58,6 @@ class JsonFileStorageAdapter(StorageAdapter):
 
         self.database.delete(statement_text)
 
-    def deserialize_responses(self, response_list):
-        """
-        Takes the list of response items and returns
-        the list converted to Response objects.
-        """
-        proxy_statement = self.Statement('')
-
-        for response in response_list:
-            data = response.copy()
-            text = data['text']
-            del data['text']
-
-            proxy_statement.add_response(
-                Response(text, **data)
-            )
-
-        return proxy_statement.in_response_to
-
     def json_to_object(self, statement_data):
         """
         Converts a dictionary-like object to a Statement object.
@@ -86,8 +67,8 @@ class JsonFileStorageAdapter(StorageAdapter):
         statement_data = statement_data.copy()
 
         # Build the objects for the response list
-        statement_data['in_response_to'] = self.deserialize_responses(
-            statement_data['in_response_to']
+        statement_data['in_response_to'] = self.Statement(
+            **statement_data['in_response_to']
         )
 
         # Remove the text attribute from the values
@@ -150,13 +131,7 @@ class JsonFileStorageAdapter(StorageAdapter):
         Update a statement in the database.
         """
         statements = self.database['statements']
-
         statements.append(statement.serialize())
-
-        # Make sure that an entry for each response exists
-        if statement.in_response_to:
-            response = self.Statement(statement.in_response_to.text)
-            statements.append(statement.in_response_to.serialize())
 
         self.database.data(key='statements', value=statements)
 
@@ -168,8 +143,7 @@ class JsonFileStorageAdapter(StorageAdapter):
         if self.count() < 1:
             raise self.EmptyDatabaseException()
 
-        statement = choice(self.database['statements'])
-        return statement
+        return choice(self.database['statements'])
 
     def drop(self):
         """

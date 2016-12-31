@@ -1,5 +1,4 @@
 from chatterbot.storage import StorageAdapter
-from chatterbot.conversation import Response
 
 
 class Query(object):
@@ -130,10 +129,6 @@ class MongoDatabaseAdapter(StorageAdapter):
         for response in response_list:
             text = response['text']
             del response['text']
-
-            proxy_statement.add_response(
-                Response(text, **response)
-            )
 
         return proxy_statement.in_response_to
 
